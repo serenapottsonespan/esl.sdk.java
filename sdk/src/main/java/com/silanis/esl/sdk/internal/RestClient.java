@@ -30,7 +30,6 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.AbstractHttpMessage;
 import org.apache.http.message.BasicHeader;
 
 import javax.net.ssl.SSLContext;
@@ -46,7 +45,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -78,7 +76,8 @@ public class RestClient {
     private final String apiToken;
     private final Support support = new Support();
     private final boolean allowAllSSLCertificates;
-    private Map<String, String> additionalHeaders = new HashMap<String, String>();
+    private final boolean useSystemProperties;
+    private Map<String, String> additionalHeaders;
 
     private ProxyConfiguration proxyConfiguration;
 
@@ -95,15 +94,19 @@ public class RestClient {
     }
 
     public RestClient(String apiToken, boolean allowAllSSLCertificates, ProxyConfiguration proxyConfiguration) {
-        this.apiToken = apiToken;
-        this.allowAllSSLCertificates = allowAllSSLCertificates;
-        this.proxyConfiguration = proxyConfiguration;
+        this(apiToken, false, proxyConfiguration, false);
     }
     
-    public RestClient(String apiToken, boolean allowAllSSLCertificates, ProxyConfiguration proxyConfiguration, Map<String, String> headers) {
+    public RestClient(String apiToken, boolean allowAllSSLCertificates, ProxyConfiguration proxyConfiguration, boolean useSystemProperties) {
+        this(apiToken, false, proxyConfiguration, useSystemProperties, new HashMap<String, String>());
+    }
+    
+    public RestClient(String apiToken, boolean allowAllSSLCertificates, ProxyConfiguration proxyConfiguration, 
+            boolean useSystemProperties, Map<String, String> headers) {
         this.apiToken = apiToken;
         this.allowAllSSLCertificates = allowAllSSLCertificates;
         this.proxyConfiguration = proxyConfiguration;
+        this.useSystemProperties = useSystemProperties;        
         this.additionalHeaders = headers;
     }
 
@@ -256,6 +259,10 @@ public class RestClient {
         final HttpClientBuilder httpClientBuilder = HttpClients.custom();
         if (allowAllSSLCertificates) {
             httpClientBuilder.setSSLSocketFactory(buildSSLSocketFactory());
+        }
+        
+        if (useSystemProperties) {
+            httpClientBuilder.useSystemProperties();
         }
 
         if (proxyConfiguration != null) {

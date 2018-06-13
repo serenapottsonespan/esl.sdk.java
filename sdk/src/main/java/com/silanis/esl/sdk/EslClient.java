@@ -20,6 +20,7 @@ import com.silanis.esl.sdk.service.apiclient.EventNotificationApiClient;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,15 +87,20 @@ public class EslClient {
     }
 
     public EslClient(String apiKey, String baseURL, String webpageURL, boolean allowAllSSLCertificates) {
+        this(apiKey, baseURL, webpageURL, allowAllSSLCertificates, false, new HashMap<String, String>());
+    }
+
+    public EslClient(String apiKey, String baseURL, String webpageURL, boolean allowAllSSLCertificates, boolean useSystemProperties, 
+            Map<String, String> additionalHeaders) {
         Asserts.notNullOrEmpty(apiKey, "apiKey");
         Asserts.notNullOrEmpty(baseURL, "baseURL");
         Asserts.notNullOrEmpty(webpageURL, "webpageURL");
         setBaseURL(baseURL);
         this.webpageURL = webpageURL;
-        RestClient client = new RestClient(apiKey, allowAllSSLCertificates);
+        RestClient client = new RestClient(apiKey, allowAllSSLCertificates, null, useSystemProperties, additionalHeaders);
         init(client);
     }
-
+    
     public EslClient(String apiKey, String baseURL, boolean allowAllSSLCertificates) {
         this(apiKey, baseURL, allowAllSSLCertificates, null);
     }
@@ -104,13 +110,23 @@ public class EslClient {
     }
 
     public EslClient(String apiKey, String baseURL, boolean allowAllSSLCertificates, ProxyConfiguration proxyConfiguration) {
+        this(apiKey, baseURL, false, proxyConfiguration, false);
+    }
+    
+    public EslClient(String apiKey, String baseURL, boolean allowAllSSLCertificates, ProxyConfiguration proxyConfiguration, boolean useSystemProperties) {
+        this(apiKey, baseURL, false, proxyConfiguration, useSystemProperties, new HashMap<String, String>());
+    }
+    
+    public EslClient(String apiKey, String baseURL, boolean allowAllSSLCertificates, ProxyConfiguration proxyConfiguration, boolean useSystemProperties, 
+            Map<String, String> additionalHeaders) {
         Asserts.notNullOrEmpty(apiKey, "apiKey");
         Asserts.notNullOrEmpty(baseURL, "baseURL");
         setBaseURL(baseURL);
         setWebpageURL(baseURL);
-        RestClient client = new RestClient(apiKey, allowAllSSLCertificates, proxyConfiguration);
+        RestClient client = new RestClient(apiKey, allowAllSSLCertificates, proxyConfiguration, useSystemProperties, additionalHeaders);
         init(client);
     }
+
 
     private void init(RestClient client) {
         packageService = new PackageService(client, this.baseURL);
